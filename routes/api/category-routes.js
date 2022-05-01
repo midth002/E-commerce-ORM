@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { Category, Product } = require('../../models');
+const { update } = require('../../models/Product');
 
 // The `/api/categories` endpoint
 
@@ -44,19 +45,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   // update a category by its `id` value
   try {
-    const catData = await Category.update(req.body, {
+    const updateCategory = await Category.update(req.body, {
       where : {
         id: req.params.id
       }
     }); 
 
     // If the user has a unknown id in the req.params.id section in the url. Send back a 400 bad request error that there is no category with that ID in the db.
-    if (!catData[0]) {
-      res.status(400).json({ message: 'No category data found for this ID in our database' });
+    if (!updateCategory[0]) {
+      res.status(404).json({ message: 'No category data found for this ID in our database to update on.' });
       return; 
     }
 
-    res.status(200).json({ message: `Updated category ${catData}`})
+    res.status(200).json(updateCategory)
 
   }
     catch (error) {
@@ -66,8 +67,25 @@ router.put('/:id', async (req, res) => {
 
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   // delete a category by its `id` value
+  try {
+    const deleteCategory = await Category.destroy({
+      where : {
+        id: req.params.id
+      }
+    });
+
+    if (!deleteCategory) {
+      res.status(404).json({ message : `No category data found for this ID in our database to delete on.`}); 
+      return;
+    }
+
+    res.status(200).json({ message :  `Deleted ${deleteCategory} from category` })
+
+  } catch (error) {
+    res.status(500).json(error)
+  }
 });
 
 module.exports = router;
